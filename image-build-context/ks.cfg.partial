@@ -1,0 +1,34 @@
+#platform=AMD64 or Intel EM64T
+
+#System language
+lang en_US
+#Language modules to install
+langsupport en_US
+#System keyboard
+keyboard us
+#System mouse
+mouse
+#System timezone
+timezone America/New_York
+#Root password
+rootpw --iscrypted $1$I8BgJLVB$JyY9oOPG4wO1ou5YkZ9Wf/
+#Initial user
+user --disabled
+#Reboot after installation
+reboot
+#Use text mode install
+text
+#Install OS instead of upgrade
+install
+#System bootloader configuration
+bootloader --location=mbr
+#Clear the Master Boot Record
+zerombr yes
+#Partition clearing information
+clearpart --all --initlabel
+#System authorization infomation
+auth  --useshadow  --enablemd5
+#Firewall configuration
+firewall --disabled
+#Do not configure the X Window System
+skipx

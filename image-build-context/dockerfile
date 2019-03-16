@@ -1,0 +1,26 @@
+FROM ubuntu:16.04 as iso-extract-stage
+
+RUN apt-get update
+
+# download Ubuntu 16.04 ISO
+RUN apt-get install -y wget
+RUN wget http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso
+
+# extract iso content
+RUN apt-get install -y xorriso
+RUN osirrox -indev ubuntu-16.04.6-server-amd64.iso -extract / /iso-content/
+
+FROM httpd
+
+RUN apt-get update
+
+RUN apt-get install -y tftpd-hpa supervisor
+
+RUN mkdir /usr/local/apache2/htdocs/ubuntu/
+COPY --from=iso-extract-stage /iso-content/ /usr/local/apache2/htdocs/ubuntu/
+COPY ks.cfg.partial /usr/local/apache2/htdocs/ks.cfg
+COPY --from=iso-extract-stage /iso-content/install/netboot/ /var/lib/tftpboot/
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
