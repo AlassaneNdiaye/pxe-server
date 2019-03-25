@@ -21,6 +21,9 @@ COPY --from=iso-extract-stage /iso-content/ /usr/local/apache2/htdocs/ubuntu/
 COPY ks.cfg.partial /usr/local/apache2/htdocs/ks.cfg
 COPY --from=iso-extract-stage /iso-content/install/netboot/ /var/lib/tftpboot/
 
+RUN apt-get install -y curl
+HEALTHCHECK --interval=5s CMD curl http://localhost/ || exit 1
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
