@@ -2,28 +2,58 @@ FROM ubuntu:16.04 as iso-extract-stage
 
 RUN apt-get update
 
-# download Ubuntu 16.04 ISO
+# download ISO images
 RUN apt-get install -y wget
 RUN wget http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso
+RUN wget http://rep-centos-ca.upress.io/7.6.1810/isos/x86_64/CentOS-7-x86_64-DVD-1810.iso
 
 # extract iso content
 RUN apt-get install -y xorriso
-RUN osirrox -indev ubuntu-16.04.6-server-amd64.iso -extract / /iso-content/
+RUN osirrox -indev ubuntu-16.04.6-server-amd64.iso -extract / /iso-content/ubuntu/16.04
+RUN osirrox -indev CentOS-7-x86_64-DVD-1810.iso -extract / /iso-content/centos/7.6
+
+
+FROM centos as boot-loader-extract-stage
+
+RUN yum -y install syslinux
+
 
 FROM httpd
 
-RUN apt-get update
+RUN apt-get update; apt-get install -y tftpd-hpa supervisor
 
-RUN apt-get install -y tftpd-hpa supervisor
+# add installation source to the web server
+COPY --from=iso-extract-stage /iso-content/ /usr/local/apache2/htdocs/
 
-RUN mkdir /usr/local/apache2/htdocs/ubuntu/
-COPY --from=iso-extract-stage /iso-content/ /usr/local/apache2/htdocs/ubuntu/
-COPY ks.cfg.partial /usr/local/apache2/htdocs/ks.cfg
-COPY --from=iso-extract-stage /iso-content/install/netboot/ /var/lib/tftpboot/
+# add kickstart files to the web server
+COPY ubuntu/ks.cfg /usr/local/apache2/htdocs/ubuntu/16.04/ks.cfg
+COPY centos/ks.cfg /usr/local/apache2/htdocs/centos/7.6/ks.cfg
 
-RUN apt-get install -y curl
-HEALTHCHECK --interval=5s CMD curl http://localhost/ || exit 1
+RUN mkdir -p /var/lib/tftpboot/ubuntu/16.04 /var/lib/tftpboot/centos/7.6 \
+             /var/lib/tftpboot/pxelinux.cfg
+
+# add boot images to the TFTP server
+COPY --from=iso-extract-stage \
+     /iso-content/ubuntu/16.04/install/netboot/ubuntu-installer/amd64/linux \
+     /var/lib/tftpboot/ubuntu/16.04
+COPY --from=iso-extract-stage \
+     /iso-content/ubuntu/16.04/install/netboot/ubuntu-installer/amd64/initrd.gz \
+     /var/lib/tftpboot/ubuntu/16.04
+COPY --from=iso-extract-stage /iso-content/centos/7.6/images/pxeboot/vmlinuz /var/lib/tftpboot/centos/7.6
+COPY --from=iso-extract-stage /iso-content/centos/7.6/images/pxeboot/initrd.img /var/lib/tftpboot/centos/7.6
+
+# add syslinux boot loaders to the TFTP server
+COPY --from=boot-loader-extract-stage /usr/share/syslinux/ /var/lib/tftpboot
+
+COPY menu /var/lib/tftpboot/pxelinux.cfg/default
+
+COPY configure-supervisor.sh /configure-supervisor.sh
+RUN chmod 755 /configure-supervisor.sh
+RUN /configure-supervisor.sh
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+RUN apt-get install -y curl
+HEALTHCHECK --interval=5s CMD curl http://localhost/ || exit 1
