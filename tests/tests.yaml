@@ -1,0 +1,20 @@
+- container:
+      name: "pxe-server"
+      arguments:
+          auto_remove: True
+          network_mode: "host"
+  tests:
+    - name: "check tftp works"
+      command: "tftp localhost <<< 'get pxelinux.0'"
+      exit-code: 0
+      expected-output: "Received"
+      files:
+        - path: "pxelinux.0"
+          exists: True
+    - name: "check web server works"
+      command: "wget http://localhost/ubuntu/16.04/ks.cfg"
+      exit-code: 0
+      expected-error: "200 OK"
+      files:
+        - path: "ks.cfg"
+          exists: True
