@@ -51,6 +51,8 @@ COPY configure-supervisor.sh /configure-supervisor.sh
 RUN chmod 755 /configure-supervisor.sh
 RUN /configure-supervisor.sh
 
+COPY add_public_key.sh /add_public_key.sh
+RUN chmod 755 /add_public_key.sh
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod 755 /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
