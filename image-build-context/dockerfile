@@ -5,12 +5,12 @@ RUN apt-get update
 # download ISO images
 RUN apt-get install -y wget
 RUN wget http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso
-RUN wget http://rep-centos-ca.upress.io/7.6.1810/isos/x86_64/CentOS-7-x86_64-DVD-1810.iso
+RUN wget http://rep-centos-ca.upress.io/7.7.1908/isos/x86_64/CentOS-7-x86_64-DVD-1908.iso
 
 # extract iso content
 RUN apt-get install -y xorriso
 RUN osirrox -indev ubuntu-16.04.6-server-amd64.iso -extract / /iso-content/ubuntu/16.04
-RUN osirrox -indev CentOS-7-x86_64-DVD-1810.iso -extract / /iso-content/centos/7.6
+RUN osirrox -indev CentOS-7-x86_64-DVD-1908.iso -extract / /iso-content/centos/7.7
 
 
 FROM centos as boot-loader-extract-stage
@@ -27,9 +27,9 @@ COPY --from=iso-extract-stage /iso-content/ /usr/local/apache2/htdocs/
 
 # add kickstart files to the web server
 COPY ubuntu/ks.cfg /usr/local/apache2/htdocs/ubuntu/16.04/ks.cfg
-COPY centos/ks.cfg /usr/local/apache2/htdocs/centos/7.6/ks.cfg
+COPY centos/ks.cfg /usr/local/apache2/htdocs/centos/7.7/ks.cfg
 
-RUN mkdir -p /var/lib/tftpboot/ubuntu/16.04 /var/lib/tftpboot/centos/7.6 \
+RUN mkdir -p /var/lib/tftpboot/ubuntu/16.04 /var/lib/tftpboot/centos/7.7 \
              /var/lib/tftpboot/pxelinux.cfg
 
 # add boot images to the TFTP server
@@ -39,8 +39,8 @@ COPY --from=iso-extract-stage \
 COPY --from=iso-extract-stage \
      /iso-content/ubuntu/16.04/install/netboot/ubuntu-installer/amd64/initrd.gz \
      /var/lib/tftpboot/ubuntu/16.04
-COPY --from=iso-extract-stage /iso-content/centos/7.6/images/pxeboot/vmlinuz /var/lib/tftpboot/centos/7.6
-COPY --from=iso-extract-stage /iso-content/centos/7.6/images/pxeboot/initrd.img /var/lib/tftpboot/centos/7.6
+COPY --from=iso-extract-stage /iso-content/centos/7.7/images/pxeboot/vmlinuz /var/lib/tftpboot/centos/7.7
+COPY --from=iso-extract-stage /iso-content/centos/7.7/images/pxeboot/initrd.img /var/lib/tftpboot/centos/7.7
 
 # add syslinux boot loaders to the TFTP server
 COPY --from=boot-loader-extract-stage /usr/share/syslinux/ /var/lib/tftpboot

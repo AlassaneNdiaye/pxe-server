@@ -11,4 +11,4 @@ chmod 0600 /root/.ssh/authorized_keys
 EOF
 )
 echo "${SCRIPT}" >> /usr/local/apache2/htdocs/ubuntu/16.04/ks.cfg
-echo "${SCRIPT}" >> /usr/local/apache2/htdocs/centos/7.6/ks.cfg
+echo "${SCRIPT}" >> /usr/local/apache2/htdocs/centos/7.7/ks.cfg
