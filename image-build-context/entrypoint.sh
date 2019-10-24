@@ -1,9 +1,6 @@
 #!/bin/bash
 
-if [[ -f /ssh/id_rsa.pub ]]
-then
-    PUBLIC_KEY=$(cat /ssh/id_rsa.pub)
-    /add_public_key.sh "${PUBLIC_KEY}"
-fi
+mkdir -p /var/lib/tftpboot/pxelinux.cfg
+cp /conf/menu /var/lib/tftpboot/pxelinux.cfg/default
 
-exec supervisord --nodaemon
+exec in.tftpd -L -s /var/lib/tftpboot/
