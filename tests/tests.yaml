@@ -1,13 +1,14 @@
-- container:
-      name: "pxe-server"
-      arguments:
-          auto_remove: True
-          network_mode: "host"
+- application:
+    name: "pxe-server"
+    type: "docker"
+    arguments:
+      image: "pxe-server"
+      network_mode: "host"
   tests:
-    - name: "check tftp works"
-      command: "tftp localhost <<< 'get pxelinux.0'"
-      exit-code: 0
-      expected-output: "Received"
-      files:
-        - path: "pxelinux.0"
-          exists: True
+  - name: "check tftp works"
+    command: "tftp localhost <<< 'get pxelinux.0'"
+    environment: "external"
+    exit-code: 0
+    files:
+    - path: "pxelinux.0"
+      exists: True
